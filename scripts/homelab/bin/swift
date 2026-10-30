@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Xcode 27's SwiftPM defaults to the swiftbuild engine, which writes products to
+# <build-path>/out/Products/<Config>/. swift-rs 1.0.7 links from the native
+# layout (<build-path>/<triple>/<config>/), so force the native build system.
+# Upstream CI builds with Xcode 26, where native is still the default.
+set -euo pipefail
+
+real_swift="$(xcrun --find swift)"
+if [[ "${1:-}" == "build" ]]; then
+  shift
+  exec "$real_swift" build --build-system native "$@"
+fi
+exec "$real_swift" "$@"
