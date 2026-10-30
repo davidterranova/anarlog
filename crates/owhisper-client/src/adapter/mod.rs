@@ -358,7 +358,14 @@ pub(crate) fn host_matches(base_url: &str, predicate: impl Fn(&str) -> bool) -> 
 const ANARLOG_PROXY_HOST: &str = "api.anarlog.so";
 
 fn is_anarlog_cloud_host(host: &str) -> bool {
-    host == ANARLOG_PROXY_HOST
+    host == ANARLOG_PROXY_HOST || self_hosted_api_host().is_some_and(|api_host| api_host == host)
+}
+
+/// Homelab: a build pointed at a self-hosted API (VITE_API_URL at compile
+/// time) must treat that host as the Anarlog proxy too.
+fn self_hosted_api_host() -> Option<String> {
+    let api_url = url::Url::parse(option_env!("VITE_API_URL")?).ok()?;
+    api_url.host_str().map(str::to_owned)
 }
 
 fn is_anarlog_cloud(base_url: &str) -> bool {

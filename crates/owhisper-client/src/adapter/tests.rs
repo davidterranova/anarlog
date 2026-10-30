@@ -95,6 +95,16 @@ fn test_is_anarlog_proxy() {
 }
 
 #[test]
+fn test_is_anarlog_proxy_self_hosted_api() {
+    if let Some(api_url) = option_env!("VITE_API_URL") {
+        assert!(is_anarlog_proxy(&format!(
+            "{}/stt",
+            api_url.trim_end_matches('/')
+        )));
+    }
+}
+
+#[test]
 fn test_is_local_argmax() {
     assert!(is_local_argmax("http://localhost:50060/v1"));
     assert!(is_local_argmax("http://127.0.0.1:50060/v1"));
