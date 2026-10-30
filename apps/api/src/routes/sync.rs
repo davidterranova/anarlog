@@ -51,7 +51,14 @@ pub(crate) fn build_sync_routes(
         return replica_routes;
     };
 
-    let cloudsync_routes = anlg_api_sync::cloudsync_router(state.clone())
+    // Without SQLite Cloud, keep `/token` unmounted so desktops fall back to
+    // the replica, but still serve the Supabase-backed attachment backups.
+    let cloudsync_routes = if state.config.cloudsync_configured() {
+        anlg_api_sync::cloudsync_router(state.clone())
+    } else {
+        anlg_api_sync::attachment_backup_router(state.clone())
+    };
+    let cloudsync_routes = cloudsync_routes
         .route_layer(middleware::from_fn_with_state(
             cloudsync_rate_limit_state,
             rate_limit::rate_limit,
@@ -181,7 +188,15 @@ pub(crate) fn router(env: &RuntimeConfig) -> Router {
         )
         .unwrap_or_else(|error| panic!("Failed to load environment: {error}")),
     );
-    let sync_state = sync_config.map(anlg_api_sync::AppState::new);
+    let sync_config = sync_config.unwrap_or_else(|| {
+        anlg_api_sync::SyncConfig::supabase_only(
+            &env.supabase.supabase_url,
+            &env.supabase.supabase_anon_key,
+            &env.supabase.supabase_service_role_key,
+        )
+        .unwrap_or_else(|error| panic!("Failed to load environment: {error}"))
+    });
+    let sync_state = Some(anlg_api_sync::AppState::new(sync_config));
     let sync_routes = build_sync_routes(
         sync_state,
         replica_state,

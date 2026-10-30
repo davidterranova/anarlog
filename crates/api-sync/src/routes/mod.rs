@@ -35,6 +35,12 @@ pub fn cloudsync_router(state: AppState) -> Router {
         .with_state(state)
 }
 
+/// Attachment backups without the SQLite Cloud `/token` route, for deployments
+/// that sync through the encrypted replica only.
+pub fn attachment_backup_router(state: AppState) -> Router {
+    attachment_backups::router().with_state(state)
+}
+
 pub fn replica_router(state: ReplicaState) -> Router {
     cloudsync_credentials::replica_router().with_state(state)
 }

@@ -308,6 +308,27 @@ async fn boots_with_minimal_self_hosted_configuration() {
             "core encrypted replica route should be mounted: {path}"
         );
     }
+    for (method, path) in [
+        (
+            Method::PUT,
+            "/sync/shares/11111111-1111-4111-8111-111111111111/snapshot",
+        ),
+        (
+            Method::PUT,
+            "/sync/shares/11111111-1111-4111-8111-111111111111/web-edit",
+        ),
+        (
+            Method::POST,
+            "/sync/shares/11111111-1111-4111-8111-111111111111/live/ticket",
+        ),
+        (Method::PUT, "/sync/attachment-backups/head"),
+    ] {
+        assert_eq!(
+            request_status(&app, method, path).await,
+            StatusCode::UNAUTHORIZED,
+            "Supabase-backed sync route should be mounted without SQLiteCloud: {path}"
+        );
+    }
     assert_eq!(
         request_status(&app, Method::POST, "/sync/token").await,
         StatusCode::NOT_FOUND,

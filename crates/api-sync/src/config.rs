@@ -301,6 +301,36 @@ impl SyncConfig {
         ))
     }
 
+    /// State for the Supabase-backed sync features (session shares, web edit,
+    /// live docs, attachment backups) when SQLite Cloud is not configured.
+    /// The SQLite Cloud fields stay empty, so `/token` must not be mounted;
+    /// see [`SyncConfig::cloudsync_configured`].
+    pub fn supabase_only(
+        supabase_url: impl Into<String>,
+        supabase_anon_key: impl Into<String>,
+        supabase_service_role_key: impl Into<String>,
+    ) -> Result<Self, String> {
+        let replica =
+            ReplicaConfig::new(supabase_url, supabase_anon_key, supabase_service_role_key)?;
+
+        Ok(Self {
+            project_url: String::new(),
+            token_issuer_api_key: String::new(),
+            database_id: String::new(),
+            legacy_database_id: None,
+            protocol_mode: CloudsyncProtocolMode::E2eeEnforced,
+            desktop_transport: CloudsyncTransport::Replica,
+            token_ttl_seconds: DEFAULT_TOKEN_TTL_SECONDS,
+            supabase_url: replica.supabase_url,
+            supabase_anon_key: replica.supabase_anon_key,
+            supabase_service_role_key: replica.supabase_service_role_key,
+        })
+    }
+
+    pub fn cloudsync_configured(&self) -> bool {
+        !self.project_url.is_empty()
+    }
+
     pub(crate) fn replica_config(&self) -> ReplicaConfig {
         ReplicaConfig {
             supabase_url: self.supabase_url.clone(),
