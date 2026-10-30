@@ -42,7 +42,8 @@ export const env = createEnv({
       : z.string().default("https://api.anarlog.so"),
     VITE_SUPABASE_URL: requiredInProd(z.string().min(1)),
     VITE_SUPABASE_ANON_KEY: requiredInProd(z.string().min(1)),
-    VITE_POSTHOG_API_KEY: requiredInProd(z.string().min(1)),
+    // Homelab: optional, so self-hosted builds can run without PostHog.
+    VITE_POSTHOG_API_KEY: z.string().min(1).optional(),
     VITE_POSTHOG_HOST: z.string().default("https://us.i.posthog.com"),
     VITE_OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
     VITE_OTEL_SAMPLE_RATE: z.coerce.number().int().positive().default(10),

@@ -59,11 +59,12 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .invoke_handler(specta_builder.invoke_handler())
         .setup(|app, _api| {
             let posthog_key = {
+                // Homelab: release builds without POSTHOG_API_KEY send no analytics.
                 #[cfg(not(debug_assertions))]
                 {
-                    let v = env!("POSTHOG_API_KEY");
-                    assert!(v.starts_with("phc_"));
-                    Some(v)
+                    let v = option_env!("POSTHOG_API_KEY");
+                    assert!(v.is_none_or(|v| v.starts_with("phc_")));
+                    v
                 }
 
                 #[cfg(debug_assertions)]
